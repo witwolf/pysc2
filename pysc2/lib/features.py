@@ -1079,7 +1079,7 @@ class Features(object):
     return list(available_actions)
 
   @sw.decorate
-  def transform_action(self, obs, func_call, skip_available=False):
+  def transform_action(self, obs, funcs, skip_available=False):
     """Tranform an agent-style action to one that SC2 can consume.
 
     Args:
@@ -1095,55 +1095,65 @@ class Features(object):
     Raises:
       ValueError: if the action doesn't pass validation.
     """
-    func_id = func_call.function
-    try:
-      func = actions.FUNCTIONS[func_id]
-    except KeyError:
-      raise ValueError("Invalid function id: %s." % func_id)
+    if not isinstance(funcs, list):
+        funcs = [funcs]
+    sc_actions = []
+    for action in funcs:
+        if isinstance(action, sc_pb.Action):
+            sc_actions.append(action)
+            continue
 
-    # Available?
-    if not (skip_available or func_id in self.available_actions(obs)):
-      raise ValueError("Function %s/%s is currently not available" % (
-          func_id, func.name))
+        func_call = action
+        func_id = func_call.function
+        try:
+          func = actions.FUNCTIONS[func_id]
+        except KeyError:
+          raise ValueError("Invalid function id: %s." % func_id)
 
-    # Right number of args?
-    if len(func_call.arguments) != len(func.args):
-      raise ValueError(
-          "Wrong number of arguments for function: %s, got: %s" % (
-              func, func_call.arguments))
+        # Available?
+        # if not (skip_available or func_id in self.available_actions(obs)):
+        #   raise ValueError("Function %s/%s is currently not available" % (
+        #       func_id, func.name))
 
-    # Args are valid?
-    aif = self._agent_interface_format
-    for t, arg in zip(func.args, func_call.arguments):
-      if t.name in ("screen", "screen2"):
-        sizes = aif.action_dimensions.screen
-      elif t.name == "minimap":
-        sizes = aif.action_dimensions.minimap
-      else:
-        sizes = t.sizes
+        # Right number of args?
+        if len(func_call.arguments) != len(func.args):
+          raise ValueError(
+              "Wrong number of arguments for function: %s, got: %s" % (
+                  func, func_call.arguments))
 
-      if len(sizes) != len(arg):
-        raise ValueError(
-            "Wrong number of values for argument of %s, got: %s" % (
-                func, func_call.arguments))
+        # Args are valid?
+        aif = self._agent_interface_format
+        for t, arg in zip(func.args, func_call.arguments):
+          if t.name in ("screen", "screen2"):
+            sizes = aif.action_dimensions.screen
+          elif t.name == "minimap":
+            sizes = aif.action_dimensions.minimap
+          else:
+            sizes = t.sizes
 
-      for s, a in zip(sizes, arg):
-        if not 0 <= a < s:
-          raise ValueError("Argument is out of range for %s, got: %s" % (
-              func, func_call.arguments))
+          if len(sizes) != len(arg):
+            raise ValueError(
+                "Wrong number of values for argument of %s, got: %s" % (
+                    func, func_call.arguments))
 
-    # Convert them to python types.
-    kwargs = {type_.name: type_.fn(a)
-              for type_, a in zip(func.args, func_call.arguments)}
+          for s, a in zip(sizes, arg):
+            if not 0 <= a < s:
+              raise ValueError("Argument is out of range for %s, got: %s" % (
+                  func, func_call.arguments))
 
-    # Call the right callback to get an SC2 action proto.
-    sc2_action = sc_pb.Action()
-    kwargs["action"] = sc2_action
-    kwargs["action_space"] = aif.action_space
-    if func.ability_id:
-      kwargs["ability_id"] = func.ability_id
-    actions.FUNCTIONS[func_id].function_type(**kwargs)
-    return sc2_action
+        # Convert them to python types.
+        kwargs = {type_.name: type_.fn(a)
+                  for type_, a in zip(func.args, func_call.arguments)}
+
+        # Call the right callback to get an SC2 action proto.
+        sc2_action = sc_pb.Action()
+        kwargs["action"] = sc2_action
+        kwargs["action_space"] = aif.action_space
+        if func.ability_id:
+          kwargs["ability_id"] = func.ability_id
+        actions.FUNCTIONS[func_id].function_type(**kwargs)
+        sc_actions.append( sc2_action)
+    return sc_actions
 
   @sw.decorate
   def reverse_action(self, action):

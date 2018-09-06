@@ -258,7 +258,11 @@ class RemoteController(object):
   def act(self, action):
     """Send a single action. This is a shortcut for `actions`."""
     if action:
-      return self.actions(sc_pb.RequestAction(actions=[action]))
+      if isinstance(action, list):
+        actions = action
+      else:
+        actions = [action]
+      return self.actions(sc_pb.RequestAction(actions=actions))
 
   def chat(self, message):
     """Send chat message as a broadcast."""
