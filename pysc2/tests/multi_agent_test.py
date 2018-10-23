@@ -93,13 +93,16 @@ class TestMultiAgent(utils.TestCase):
 
             agent = MultiAgent(obs_spec, action_spec)
             multiplayer_obs = env.reset()
-
+            episode = 0
             for _ in range(10000):
                 raw_obs = multiplayer_obs[0]
                 obs = raw_obs.observation
                 act = agent.step(obs)
                 multiplayer_act = (act,)
                 multiplayer_obs = env.step(multiplayer_act)
+                if raw_obs.last():
+                    print('Episode:%d, score:%d' % (episode, obs['score_cumulative'][0]))
+                    episode += 1
 
 
 if __name__ == "__main__":
