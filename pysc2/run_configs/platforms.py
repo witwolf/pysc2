@@ -175,6 +175,12 @@ class Linux(LocalBase):
     env["LD_LIBRARY_PATH"] = ":".join(filter(None, [
         os.environ.get("LD_LIBRARY_PATH"),
         os.path.join(base_dir, "Libs/")]))
+    env.pop('GEOPROBE_USEGLX', None)
+    env.pop('PROMAGIC_USEGLX', None)
+    env.pop('VBOX_CROGL_FORCE_SUPPORTED', None)
+    env.pop('VGL_ISACTIVE', None)
+    env['_'] = '/usr/bin/python'
+    env['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libGLEW.so'
     super(Linux, self).__init__(base_dir, "SC2_x64", env=env)
 
   @classmethod

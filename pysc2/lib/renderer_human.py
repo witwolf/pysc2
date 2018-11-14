@@ -204,6 +204,7 @@ def _get_desktop_size():
         return point.Point(int(sizes[0][0]), int(sizes[0][1]))
     except:  # pylint: disable=bare-except
       logging.error("Failed to get the resolution from xrandr.")
+      return point.Point(1240, 900)
 
   # Most general, but doesn't understand multiple monitors.
   display_info = pygame.display.Info()

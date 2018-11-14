@@ -45,13 +45,13 @@ flags.DEFINE_bool("full_screen", False, "Whether to run full screen.")
 flags.DEFINE_float("fps", 22.4, "Frames per second to run the game.")
 flags.DEFINE_integer("step_mul", 1, "Game steps per observation.")
 flags.DEFINE_bool("render_sync", False, "Turn on sync rendering.")
-point_flag.DEFINE_point("feature_screen_size", "84",
+point_flag.DEFINE_point("feature_screen_size", "64",
                         "Resolution for screen feature layers.")
 point_flag.DEFINE_point("feature_minimap_size", "64",
                         "Resolution for minimap feature layers.")
-point_flag.DEFINE_point("rgb_screen_size", "256,192",
+point_flag.DEFINE_point("rgb_screen_size", "64,64",
                         "Resolution for rendered screen.")
-point_flag.DEFINE_point("rgb_minimap_size", "128",
+point_flag.DEFINE_point("rgb_minimap_size", "64",
                         "Resolution for rendered minimap.")
 flags.DEFINE_string("video", None, "Path to render a video of observations.")
 
@@ -112,9 +112,9 @@ def main(unused_argv):
     FLAGS.feature_screen_size.assign_to(interface.feature_layer.resolution)
     FLAGS.feature_minimap_size.assign_to(
         interface.feature_layer.minimap_resolution)
-  if FLAGS.rgb_screen_size and FLAGS.rgb_minimap_size:
-    FLAGS.rgb_screen_size.assign_to(interface.render.resolution)
-    FLAGS.rgb_minimap_size.assign_to(interface.render.minimap_resolution)
+  # if FLAGS.rgb_screen_size and FLAGS.rgb_minimap_size:
+  #   FLAGS.rgb_screen_size.assign_to(interface.render.resolution)
+  #   FLAGS.rgb_minimap_size.assign_to(interface.render.minimap_resolution)
 
   max_episode_steps = FLAGS.max_episode_steps
 
