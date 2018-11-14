@@ -196,11 +196,12 @@ class FeatureUnit(enum.IntEnum):
 
 class FeatureUnitOrder(enum.IntEnum):
   """Indices for the `units_orders` observations."""
-  ability_id = 0
-  target_unit_tag = 1
-  target_x = 2
-  target_y = 3
-  progress = 4
+  unit_type = 0
+  ability_id = 1
+  target_unit_tag = 2
+  target_x = 3
+  target_y = 4
+  progress = 5
 
 class Feature(collections.namedtuple(
     "Feature", ["index", "name", "layer_set", "full_name", "scale", "type",
@@ -1023,17 +1024,16 @@ class Features(object):
       unit_orders = []
       for order in unit.orders:
         o = np.array((
+            unit.unit_type,
             getattr(order, 'ability_id', -1),
             getattr(order, 'target_unit_tag', 0),
             int(getattr(getattr(order, 'target_world_space_pos', {'x': 0.0, 'y': 0.0}), 'x', 0.0)),
             int(getattr(getattr(order, 'target_world_space_pos', {'x': 0.0, 'y': 0.0}), 'y', 0.0)),
             int(getattr(order, 'progress', 0.0) * 100)
           ), dtype=np.int32)
+        o = named_array.NamedNumpyArray(
+            o, [FeatureUnitOrder], dtype=np.int32)
         unit_orders.append(o)
-        if len(unit_orders) >= 5:
-          break
-      while len(unit_orders) < 5:
-        unit_orders.append(np.array([-1,0,0,0,0], dtype=np.int32))
       return unit_orders
 
     raw = obs.observation.raw_data
@@ -1052,8 +1052,7 @@ class Features(object):
 
     with sw("units_orders"):
       units_orders = [unit_orders_vecs(u) for u in raw.units]
-      out["units_orders"] = named_array.NamedNumpyArray(
-          units_orders, [None, None, FeatureUnitOrder], dtype=np.int32)
+      out["units_orders"] = units_orders
 
     if aif.use_raw_units:
       with sw("raw_units"):
